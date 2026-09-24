@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Додати книгу</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            background: #f5f3ef;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: #3d405b;
+            color: white;
+            padding: 20px 0;
+        }
+
+        main {
+            padding: 40px 0;
+        }
+
+        h2 {
+            color: #3d405b;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background: white;
+            max-width: 450px;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button {
+            background: #e07a5f;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #3d405b;
+        }
+
+        #message {
+            margin-top: 15px;
+        }
+
+        .success {
+            color: #2e7d32;
+        }
+
+        .error {
+            color: #c0392b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #3d405b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Міська бібліотека</h1>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Додати книгу</h2>
+
+            <form id="book-form">
+                <label>Назва
+                    <input type="text" id="title" required>
+                </label>
+
+                <label>Ціна, грн
+                    <input type="number" id="price" min="0" required>
+                </label>
+
+                <label class="checkbox">
+                    <input type="checkbox" id="is_active" checked> В наявності
+                </label>
+
+                <button type="submit">Додати</button>
+
+                <p id="message"></p>
+            </form>
+
+            <h2>Список книг</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Назва</th>
+                        <th>Ціна</th>
+                        <th>Наявність</th>
+                    </tr>
+                </thead>
+                <tbody id="books"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const form = document.getElementById("book-form")
+        const message = document.getElementById("message")
+        const booksTable = document.getElementById("books")
+
+        async function loadBooks() {
+            const res = await fetch("/books")
+            const result = await res.json()
+            booksTable.innerHTML = ""
+            if (!result.data) return
+
+            result.data.forEach(book => {
+                const row = document.createElement("tr")
+                const cells = [book.id, book.title, book.price + " грн", book.is_active ? "Так" : "Ні"]
+                cells.forEach(text => {
+                    const td = document.createElement("td")
+                    td.textContent = text
+                    row.appendChild(td)
+                })
+                booksTable.appendChild(row)
+            })
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault()
+
+            const book = {
+                title: document.getElementById("title").value,
+                price: Number(document.getElementById("price").value),
+                is_active: document.getElementById("is_active").checked
+            }
+
+            const res = await fetch("/books", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(book)
+            })
+            const result = await res.json()
+
+            if (res.ok) {
+                message.className = "success"
+                message.textContent = `Книгу "${result.data.title}" додано`
+                form.reset()
+                loadBooks()
+            } else {
+                message.className = "error"
+                message.textContent = result.error
+            }
+        })
+
+        loadBooks()
+    </script>
+
+</body>
+</html>
