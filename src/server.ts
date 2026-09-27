@@ -63,6 +63,29 @@ app.get('/books/:id', (req,res)=>{
     res.status(response.status).json(response)
 })
 
+app.get('/books/:title/:is_active',(req,res)=>{
+    if(req.params.is_active!=="true" && req.params.is_active!=="false")
+    {
+        const response:BookResponseType = {
+            data:null,
+            error:"is_active must be true or false",
+            status:400
+        }
+        res.status(response.status).json(response)
+        return
+    }
+    const title:string = req.params.title.toLowerCase()
+    const is_active:boolean = req.params.is_active==="true"
+    const found_books:BookType[] = books.filter((book)=>book.is_active===is_active && book.title.toLowerCase().includes(title))
+    const exist_books:boolean = found_books.length>0
+    const response:BookResponseType = {
+        data:exist_books?found_books:null,
+        error:exist_books?null:"Books not found",
+        status:exist_books?200:404
+    }
+    res.status(response.status).json(response)
+})
+
 //Отримати всі книжки
 app.get('/books',(req,res)=>{
     const exist_book:boolean = books.length>0
